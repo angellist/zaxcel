@@ -1,63 +1,9 @@
-require:
-  - rubocop-rspec
+inherit_gem:
+  rubocop-angellist: rubocop.yml
 
+# Local project tweaks can go below. Keep minimal; rely on shared config.
 AllCops:
-  NewCops: enable
-  TargetRubyVersion: 3.0
   Exclude:
-    - 'vendor/**/*'
-    - 'sorbet/**/*'
-    - 'tmp/**/*'
-
-Style/Documentation:
-  Enabled: false
-
-Style/StringLiterals:
-  EnforcedStyle: single_quotes
-
-Style/FrozenStringLiteralComment:
-  Enabled: true
-
-Layout/LineLength:
-  Max: 120
-
-Metrics/BlockLength:
-  Exclude:
-    - 'spec/**/*'
-    - 'examples/**/*'
-
-Metrics/MethodLength:
-  Max: 20
-  Exclude:
-    - 'spec/**/*'
-
-Metrics/AbcSize:
-  Max: 25
-  Exclude:
-    - 'spec/**/*'
-
-Style/TrailingCommaInArrayLiteral:
-  EnforcedStyleForMultiline: no_comma
-
-Style/TrailingCommaInHashLiteral:
-  EnforcedStyleForMultiline: no_comma
-
-Naming/MethodParameterName:
-  AllowedNames:
-    - io
-    - id
-    - to
-    - by
-    - on
-    - in
-    - at
-
-RSpec/ExampleLength:
-  Max: 15
-
-RSpec/MultipleExpectations:
-  Max: 5
-
-RSpec/NestedGroups:
-  Max: 4
-
+    - "vendor/**/*"
+    - "sorbet/**/*"
+    - "tmp/**/*"

@@ -7,7 +7,7 @@ class Zaxcel::BinaryExpressions::Multiplication < Zaxcel::BinaryExpression
   sig do
     params(
       lh_value: Zaxcel::Cell::ValueType,
-      rh_value: Zaxcel::Cell::ValueType
+      rh_value: Zaxcel::Cell::ValueType,
     ).void
   end
   def initialize(lh_value, rh_value)

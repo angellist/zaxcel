@@ -8,11 +8,11 @@ RSpec::Core::RakeTask.new(:spec)
 RuboCop::RakeTask.new
 
 desc 'Run Sorbet type checker'
-task :sorbet do
+task sorbet: :environment do
   sh 'bundle exec srb tc'
 end
 
 desc 'Run all checks (tests, linting, type checking)'
-task checks: %i[spec rubocop sorbet]
+task checks: [:spec, :rubocop, :sorbet]
 
 task default: :checks

@@ -11,7 +11,7 @@ class Zaxcel::BinaryExpression < Zaxcel::CellFormula
     params(
       operator: String,
       lh_value: Zaxcel::Cell::ValueType,
-      rh_value: Zaxcel::Cell::ValueType
+      rh_value: Zaxcel::Cell::ValueType,
     ).void
   end
   def initialize(operator, lh_value, rh_value)
@@ -33,7 +33,7 @@ class Zaxcel::BinaryExpression < Zaxcel::CellFormula
   sig do
     params(
       value: Zaxcel::Cell::ValueType,
-      on_sheet: String
+      on_sheet: String,
     ).returns(T.any(Numeric, Money, String))
   end
   def format_value(value, on_sheet:)

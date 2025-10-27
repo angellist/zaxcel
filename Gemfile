@@ -7,3 +7,7 @@ gemspec
 
 gem 'pry', '~> 0.14'
 gem 'simplecov', '~> 0.22', require: false
+
+group :development do
+  gem 'rubocop-angellist', github: 'angellist/rubocop-angellist'
+end

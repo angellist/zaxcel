@@ -19,7 +19,7 @@ class Zaxcel::Document
 
   sig { params(sheet: Axlsx::Worksheet, range_to_include: String).void }
   def set_print_area(sheet:, range_to_include:)
-    @document.workbook.add_defined_name("#{range_to_include}", local_sheet_id: sheet.index, name: '_xlnm.Print_Area')
+    @document.workbook.add_defined_name(range_to_include.to_s, local_sheet_id: sheet.index, name: '_xlnm.Print_Area')
   end
 
   sig { params(sheet_name: String, sheet_visibility: Zaxcel::Sheet::SheetVisibility).returns(Zaxcel::Sheet) }
@@ -86,8 +86,10 @@ class Zaxcel::Document
     # 1. be max 31 charaters
     # 2. not special characters
     # 3. be unique
-    cleaned_sheet_name = sheet_name.gsub(/[^0-9a-z_ ]/i, '').parameterize(separator: ' ',
-                                                                          preserve_case: true).first(MAX_SHEET_NAME_LENGTH)
+    cleaned_sheet_name = sheet_name.gsub(/[^0-9a-z_ ]/i, '').parameterize(
+      separator: ' ',
+      preserve_case: true,
+    ).first(MAX_SHEET_NAME_LENGTH)
 
     unique_index = 0
 

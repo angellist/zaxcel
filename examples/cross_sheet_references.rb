@@ -24,15 +24,15 @@ products = [
   { name: 'Widget A', price: 10.50, stock: 100 },
   { name: 'Widget B', price: 15.75, stock: 75 },
   { name: 'Gadget X', price: 25.00, stock: 50 },
-  { name: 'Gadget Y', price: 30.25, stock: 25 }
+  { name: 'Gadget Y', price: 30.25, stock: 25 },
 ]
 
 product_rows = []
 products.each do |product|
   row = data_sheet.add_row!(product[:name])
-                  .add!(:product, value: product[:name])
-                  .add!(:unit_price, value: product[:price], style: :currency)
-                  .add!(:stock, value: product[:stock])
+    .add!(:product, value: product[:name])
+    .add!(:unit_price, value: product[:price], style: :currency)
+    .add!(:stock, value: product[:stock])
   product_rows << row
 end
 
@@ -51,46 +51,46 @@ inventory_formula = product_rows.sum(Zaxcel::Arithmetic.zero) do |row|
 end
 
 summary_sheet.add_row!(:total_inventory)
-             .add!(:metric, value: 'Total Inventory Value')
-             .add!(:value, value: inventory_formula, style: :currency)
+  .add!(:metric, value: 'Total Inventory Value')
+  .add!(:value, value: inventory_formula, style: :currency)
 
 # Average product price
 avg_price = Zaxcel::Functions::Average.new(
   Zaxcel::Lang.range(
     data_sheet.cell_ref(:unit_price, products.first[:name]),
-    data_sheet.cell_ref(:unit_price, products.last[:name])
-  )
+    data_sheet.cell_ref(:unit_price, products.last[:name]),
+  ),
 )
 
 summary_sheet.add_row!(:avg_price)
-             .add!(:metric, value: 'Average Product Price')
-             .add!(:value, value: avg_price, style: :currency)
+  .add!(:metric, value: 'Average Product Price')
+  .add!(:value, value: avg_price, style: :currency)
 
 # Total stock units
 total_stock = Zaxcel::Functions.sum(
   Zaxcel::Lang.range(
     data_sheet.cell_ref(:stock, products.first[:name]),
-    data_sheet.cell_ref(:stock, products.last[:name])
-  )
+    data_sheet.cell_ref(:stock, products.last[:name]),
+  ),
 )
 
 summary_sheet.add_row!(:total_stock)
-             .add!(:metric, value: 'Total Stock Units')
-             .add!(:value, value: total_stock)
+  .add!(:metric, value: 'Total Stock Units')
+  .add!(:value, value: total_stock)
 
 # Most expensive product
 max_price = Zaxcel::Functions::Max.new(
   [
     Zaxcel::Lang.range(
       data_sheet.cell_ref(:unit_price, products.first[:name]),
-      data_sheet.cell_ref(:unit_price, products.last[:name])
-    )
-  ]
+      data_sheet.cell_ref(:unit_price, products.last[:name]),
+    ),
+  ],
 )
 
 summary_sheet.add_row!(:max_price)
-             .add!(:metric, value: 'Highest Price')
-             .add!(:value, value: max_price, style: :currency)
+  .add!(:metric, value: 'Highest Price')
+  .add!(:value, value: max_price, style: :currency)
 
 summary_sheet.position_rows!
 summary_sheet.generate_sheet!

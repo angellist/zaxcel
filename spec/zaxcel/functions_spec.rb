@@ -16,7 +16,7 @@ RSpec.describe Zaxcel::Functions do
       row1 = sheet.add_row!(:row1).add!(:value, value: 10)
       row2 = sheet.add_row!(:row2).add!(:value, value: 20)
 
-      sum = Zaxcel::Functions.sum(row1.ref(:value), row2.ref(:value))
+      sum = described_class.sum(row1.ref(:value), row2.ref(:value))
       expect(sum).to be_a(Zaxcel::CellFormula)
     end
   end
@@ -25,7 +25,7 @@ RSpec.describe Zaxcel::Functions do
     it 'creates a round formula' do
       row1 = sheet.add_row!(:row1).add!(:value, value: 10.567)
 
-      rounded = Zaxcel::Functions.round(row1.ref(:value), precision: 2)
+      rounded = described_class.round(row1.ref(:value), precision: 2)
       expect(rounded).to be_a(Zaxcel::CellFormula)
     end
   end
@@ -63,7 +63,7 @@ RSpec.describe Zaxcel::Functions do
       row2 = sheet.add_row!(:row2).add!(:value, value: 20)
 
       range = Zaxcel::Lang.range(row1.ref(:value), row2.ref(:value))
-      avg = Zaxcel::Functions.average(range)
+      avg = described_class.average(range)
       expect(avg).to be_a(Zaxcel::Functions::Average)
     end
   end

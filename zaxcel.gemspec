@@ -25,11 +25,11 @@ Gem::Specification.new do |spec|
     'documentation_uri' => 'https://github.com/angellist/zaxcel',
     'homepage_uri' => 'https://github.com/angellist/zaxcel',
     'source_code_uri' => 'https://github.com/angellist/zaxcel',
-    'rubygems_mfa_required' => 'true'
+    'rubygems_mfa_required' => 'true',
   }
 
   spec.files = Dir.chdir(__dir__) do
-    `git ls-files -z`.split("\x0").reject do |f|
+    %x(git ls-files -z).split("\x0").reject do |f|
       (File.expand_path(f) == __FILE__) ||
         f.start_with?(*%w[bin/ test/ spec/ features/ .git .circleci appveyor Gemfile])
     end
@@ -48,8 +48,8 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'bundler', '~> 2.0'
   spec.add_development_dependency 'rake', '~> 13.0'
   spec.add_development_dependency 'rspec', '~> 3.0'
-  spec.add_development_dependency 'rubocop', '~> 1.0'
-  spec.add_development_dependency 'rubocop-rspec', '~> 2.0'
+  spec.add_development_dependency 'rubocop', '~> 1.72'
+  spec.add_development_dependency 'rubocop-rspec', '~> 3.5'
   spec.add_development_dependency 'sorbet', '~> 0.5'
   spec.add_development_dependency 'tapioca', '~> 0.11'
 end

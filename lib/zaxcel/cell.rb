@@ -105,7 +105,7 @@ class Zaxcel::Cell
       params(
         value: T.nilable(T.any(ValueType, Zaxcel::References::Range)),
         on_sheet: String,
-        quote_strings: T::Boolean
+        quote_strings: T::Boolean,
       ).returns(T.nilable(T.any(Numeric, Money, String)))
     end
     def format(value, on_sheet:, quote_strings: true)

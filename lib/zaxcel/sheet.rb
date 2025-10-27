@@ -74,24 +74,24 @@ class Zaxcel::Sheet
   sig { returns(T::Array[T.nilable(T.any(Float, Integer))]) }
   def column_widths
     columns.map do |col|
-      next T.cast(col.width, T.nilable(T.any(Float, Integer))) if !Zaxcel::Column::ComputedColumnWidth.values.include?(col.width)
+      next T.cast(col.width, T.nilable(T.any(Float, Integer))) if !Zaxcel::Column::ComputedColumnWidth.value?(col.width)
 
       character_length = case col.width
-                         when Zaxcel::Column::ComputedColumnWidth::MaxContent
-                           rows.map do |row|
-                             cell = col.cell(row.name)
-                             next 0 if cell.nil? || cell.value.is_a?(Zaxcel::References::Column)
+      when Zaxcel::Column::ComputedColumnWidth::MaxContent
+        rows.map do |row|
+          cell = col.cell(row.name)
+          next 0 if cell.nil? || cell.value.is_a?(Zaxcel::References::Column)
 
-                             cell.estimated_formatted_character_length
-                           end.compact.max
-                         when Zaxcel::Column::ComputedColumnWidth::Header
-                           col.cell(HEADER_ROW_KEY)&.estimated_formatted_character_length || 0
-                         when Zaxcel::Column::ComputedColumnWidth::HeaderTwoLines
-                           # if we ever have to do fit to more than two lines (don't think we ever would),
-                           # just refac this to support N lines and pass N in somehow
-                           uneven_line_break_buffer = 3
-                           (((col.cell(HEADER_ROW_KEY)&.estimated_formatted_character_length || 0) / 2) + uneven_line_break_buffer)
-                         end
+          cell.estimated_formatted_character_length
+        end.compact.max
+      when Zaxcel::Column::ComputedColumnWidth::Header
+        col.cell(HEADER_ROW_KEY)&.estimated_formatted_character_length || 0
+      when Zaxcel::Column::ComputedColumnWidth::HeaderTwoLines
+        # if we ever have to do fit to more than two lines (don't think we ever would),
+        # just refac this to support N lines and pass N in somehow
+        uneven_line_break_buffer = 3
+        (((col.cell(HEADER_ROW_KEY)&.estimated_formatted_character_length || 0) / 2) + uneven_line_break_buffer)
+      end
 
       next if character_length.nil?
 
@@ -114,7 +114,7 @@ class Zaxcel::Sheet
       @worksheet.add_row(
         formatted_cells,
         style: cells_in_row.map { |c| @document.style(c&.style || :default_cell) },
-        height: row.height
+        height: row.height,
       )
       @worksheet.column_widths(*T.unsafe(column_widths))
     end
@@ -160,7 +160,7 @@ class Zaxcel::Sheet
         "#{T.must(first_cell).to_excel}:#{T.must(last_cell).to_excel}",
         type: formatting[:rule],
         dxfId: @document.style(formatting[:style]),
-        priority: 1 # i don't know what this means :)
+        priority: 1, # i don't know what this means :)
       )
     end
   end
@@ -194,7 +194,7 @@ class Zaxcel::Sheet
   sig { void }
   def hide_rows!
     rows.each_with_index do |row, i|
-      next unless row.hidden?
+      next if !row.hidden?
 
       @worksheet.rows[i].hidden = true
     end
@@ -212,7 +212,7 @@ class Zaxcel::Sheet
   def add_image_to_worksheet!(image_path, width:, height:, row_position:, column_position:)
     @worksheet.add_image(
       image_src: image_path,
-      noMove: true
+      noMove: true,
     ) do |image|
       image.width = width
       image.height = height
@@ -243,13 +243,22 @@ class Zaxcel::Sheet
   end
 
   sig do
-    params(name: T.any(Symbol, String, Numeric), style_group: Symbol, height: T.nilable(Integer),
-           hidden: T::Boolean).returns(Zaxcel::Row)
+    params(
+      name: T.any(Symbol, String, Numeric),
+      style_group: Symbol,
+      height: T.nilable(Integer),
+      hidden: T::Boolean,
+    ).returns(Zaxcel::Row)
   end
   def add_row!(name, style_group: :row_style, height: nil, hidden: false)
     name = name.to_s if name.is_a?(Numeric)
-    rows_by_name[name.to_sym] ||= Zaxcel::Row.new(name.to_sym, sheet: self, style_group: style_group, height: height,
-                                                               hidden: hidden)
+    rows_by_name[name.to_sym] ||= Zaxcel::Row.new(
+      name.to_sym,
+      sheet: self,
+      style_group: style_group,
+      height: height,
+      hidden: hidden,
+    )
   end
 
   sig { params(style_group: Symbol).returns(Zaxcel::Row) }
@@ -267,7 +276,7 @@ class Zaxcel::Sheet
       total_style: T.nilable(Symbol),
       width: T.nilable(T.any(Integer, Float, Zaxcel::Column::ComputedColumnWidth)),
       alt_row_style: T.nilable(Symbol),
-      min_width: T.nilable(T.any(Integer, Float))
+      min_width: T.nilable(T.any(Integer, Float)),
     ).returns(Zaxcel::Column)
   end
   def add_column!(
@@ -291,7 +300,7 @@ class Zaxcel::Sheet
       total_style: total_style,
       width: width,
       alt_row_style: alt_row_style,
-      min_width: min_width
+      min_width: min_width,
     )
   end
 
@@ -304,7 +313,7 @@ class Zaxcel::Sheet
     params(
       range: T.any(Zaxcel::References::Column, T::Array[Zaxcel::References::Cell]),
       rule: Symbol,
-      style: Symbol
+      style: Symbol,
     ).void
   end
   def add_conditional_formatting!(range:, rule:, style:)
@@ -349,9 +358,14 @@ class Zaxcel::Sheet
 
   sig { returns(T::Array[{ range: T.any(Zaxcel::References::Column, T::Array[Zaxcel::References::Cell]), rule: Symbol, style: Symbol }]) }
   def conditional_formatting
-    @conditional_formatting ||= T.let([],
-                                      T.nilable(T::Array[{ range: T.any(Zaxcel::References::Column, T::Array[Zaxcel::References::Cell]), rule: Symbol,
-                                                           style: Symbol }]))
+    @conditional_formatting ||= T.let(
+      [],
+      T.nilable(T::Array[{
+        range: T.any(Zaxcel::References::Column, T::Array[Zaxcel::References::Cell]),
+        rule: Symbol,
+        style: Symbol,
+      }]),
+    )
   end
 
   sig { void }
@@ -366,13 +380,20 @@ class Zaxcel::Sheet
   end
 
   sig do
-    params(col_name: T.any(Symbol, String), row_name: T.any(Symbol, String, Numeric),
-           sheet_name: T.nilable(String)).returns(Zaxcel::References::Cell)
+    params(
+      col_name: T.any(Symbol, String),
+      row_name: T.any(Symbol, String, Numeric),
+      sheet_name: T.nilable(String),
+    ).returns(Zaxcel::References::Cell)
   end
   def cell_ref(col_name, row_name, sheet_name: nil)
     row_name = row_name.to_s if row_name.is_a?(Numeric)
-    Zaxcel::References::Cell.new(document: @document, sheet_name: sheet_name || @name, row_name: row_name.to_sym,
-                                 col_name: col_name.to_sym)
+    Zaxcel::References::Cell.new(
+      document: @document,
+      sheet_name: sheet_name || @name,
+      row_name: row_name.to_sym,
+      col_name: col_name.to_sym,
+    )
   end
 
   sig { params(col_name: T.any(Symbol, String), sheet_name: T.nilable(String)).returns(Zaxcel::References::Column) }
@@ -387,7 +408,7 @@ class Zaxcel::Sheet
     value = cell&.value
     base_format = Zaxcel::Cell.format(value, on_sheet: @name, quote_strings: false)
     # always pass along numerics + money + nil as is for caxlsx to print directly
-    return base_format unless base_format.is_a?(String)
+    return base_format if !base_format.is_a?(String)
 
     # prefix the evaluation operator if the result is a cell formula
     if value.is_a?(Time) || value.is_a?(Zaxcel::CellFormula) || value.is_a?(Zaxcel::Reference) || value.is_a?(TrueClass) || value.is_a?(FalseClass)

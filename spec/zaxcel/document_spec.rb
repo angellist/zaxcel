@@ -102,32 +102,32 @@ RSpec.describe Zaxcel::Document do
       # Add header row
       document.add_style!(:header, b: true, bg_color: 'CCCCCC')
       sheet.add_row!(:header)
-           .add!(:product, value: 'Product')
-           .add!(:price, value: 'Price')
-           .add!(:quantity, value: 'Quantity')
-           .add!(:total, value: 'Total')
+        .add!(:product, value: 'Product')
+        .add!(:price, value: 'Price')
+        .add!(:quantity, value: 'Quantity')
+        .add!(:total, value: 'Total')
 
       # Add data rows
       row1 = sheet.add_row!(:item1)
-                  .add!(:product, value: 'Widget')
-                  .add!(:price, value: 10.00)
-                  .add!(:quantity, value: 5)
+        .add!(:product, value: 'Widget')
+        .add!(:price, value: 10.00)
+        .add!(:quantity, value: 5)
 
       # Add formula for total
       row1.add!(:total, value: row1.ref(:price) * row1.ref(:quantity))
 
       row2 = sheet.add_row!(:item2)
-                  .add!(:product, value: 'Gadget')
-                  .add!(:price, value: 20.00)
-                  .add!(:quantity, value: 3)
+        .add!(:product, value: 'Gadget')
+        .add!(:price, value: 20.00)
+        .add!(:quantity, value: 3)
       row2.add!(:total, value: row2.ref(:price) * row2.ref(:quantity))
 
       # Add total row with sum
       sheet.add_row!(:grand_total)
-           .add!(:product, value: 'TOTAL')
-           .add!(:price, value: nil)
-           .add!(:quantity, value: nil)
-           .add!(:total, value: row1.ref(:total) + row2.ref(:total))
+        .add!(:product, value: 'TOTAL')
+        .add!(:price, value: nil)
+        .add!(:quantity, value: nil)
+        .add!(:total, value: row1.ref(:total) + row2.ref(:total))
 
       # Do not call generate_sheet!; content should still be present
       contents = document.file_contents
