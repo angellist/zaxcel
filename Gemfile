@@ -2,9 +2,6 @@
 
 source 'https://rubygems.org'
 
-# Ensure Bundler uses the project's Ruby version
-ruby File.read(File.join(__dir__, '.ruby-version')).strip
-
 # Specify your gem's dependencies in zaxcel.gemspec
 gemspec
 
