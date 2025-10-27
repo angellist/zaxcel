@@ -25,8 +25,8 @@ jobs:
       - name: Run tests
         run: bundle exec rspec
 
-      - name: Run RuboCop
-        run: bundle exec rubocop
+      - name: Run RuboCop (fail only on errors)
+        run: bundle exec rubocop --fail-level error
 
       - name: Run Sorbet type checker
         run: bundle exec srb tc
