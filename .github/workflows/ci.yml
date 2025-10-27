@@ -31,7 +31,6 @@ jobs:
       - name: Generate RBI files (Tapioca)
         run: |
           bundle exec tapioca gems
-          bundle exec tapioca dsl
 
       - name: Run Sorbet type checker
         run: bundle exec srb tc
