@@ -4,8 +4,8 @@ Zaxcel is a Ruby library built on top of [caxlsx](https://github.com/caxlsx/caxl
 
 ## Philosophy
 
-* **Goal**: Enable building Excel sheets in a Ruby-idiomatic DSL without having to think about the underlying Excel. We want to interact with purely Ruby objects in a purely Ruby way while building Excel sheets.
-* **Anti-goal**: Reimplementing Excel in Ruby.
+- **Goal**: Enable building Excel sheets in a Ruby-idiomatic DSL without having to think about the underlying Excel. We want to interact with purely Ruby objects in a purely Ruby way while building Excel sheets.
+- **Anti-goal**: Reimplementing Excel in Ruby.
 
 ## Installation
 
@@ -25,6 +25,22 @@ Or install it yourself as:
 
 ```bash
 $ gem install zaxcel
+```
+
+### Requirements
+
+- Ruby >= 3.0 (tested up to 3.4)
+- Runtime dependencies are managed automatically via Rubygems, but you should have Bundler set up in your project. Zaxcel depends on:
+  - `caxlsx` (~> 4.0)
+  - `activesupport` (>= 6.0)
+  - `money` (~> 6.0)
+  - `sorbet-runtime` (~> 0.5)
+
+For running examples directly from the repo, prefer using Bundler:
+
+```bash
+bundle install
+bundle exec ruby examples/basic_spreadsheet.rb
 ```
 
 ## Usage
@@ -56,11 +72,14 @@ sheet.add_row!(:total)
   .add!(:column_1, value: 'Total')
   .add!(:column_2, row_1.ref(:column_2) + row_2.ref(:column_2))
 
-# Generate the sheet
+# Finalize the sheet (position rows before generating so references resolve)
+sheet.position_rows!
 sheet.generate_sheet!
 
-# Write to file
-File.write('output.xlsx', document.file_contents)
+# Write to file (binary-safe)
+data = document.file_contents
+raise 'Document had no contents' if data.nil?
+File.write('output.xlsx', data, mode: 'wb')
 ```
 
 ### Working with Formulas
@@ -75,17 +94,24 @@ cell_product = row_1.ref(:amount) * row_2.ref(:amount)
 cell_quotient = row_1.ref(:amount) / row_2.ref(:amount)
 
 # Excel functions
-sum_formula = Zaxcel::Functions.sum_range([row_1.ref(:amount), row_10.ref(:amount)])
-average_formula = Zaxcel::Functions::Average.new([row_1.ref(:amount), row_10.ref(:amount)])
-max_formula = Zaxcel::Functions::Max.new([row_1.ref(:amount), row_10.ref(:amount)])
-min_formula = Zaxcel::Functions::Min.new([row_1.ref(:amount), row_10.ref(:amount)])
+sum_formula = Zaxcel::Functions.sum(
+  Zaxcel::Lang.range(row_1.ref(:amount), row_10.ref(:amount))
+)
+average_formula = Zaxcel::Functions::Average.new(
+  Zaxcel::Lang.range(row_1.ref(:amount), row_10.ref(:amount))
+)
+max_formula = Zaxcel::Functions.max(
+  Zaxcel::Lang.range(row_1.ref(:amount), row_10.ref(:amount))
+)
+min_formula = Zaxcel::Functions.min(
+  Zaxcel::Lang.range(row_1.ref(:amount), row_10.ref(:amount))
+)
 
 # Conditional formulas
-if_formula = Zaxcel::Functions::If.new(
-  condition: row_1.ref(:amount) > 100,
-  true_value: 'High',
-  false_value: 'Low'
-)
+if_formula = Zaxcel::Lang
+  .if(row_1.ref(:amount) > 100)
+  .then('High')
+  .else('Low')
 
 # Rounding
 rounded = Zaxcel::Functions.round(row_1.ref(:amount), precision: 2)
@@ -107,6 +133,8 @@ row_1 = data_sheet.add_row!(:row_1)
   .add!(:category, value: 'Sales')
   .add!(:value, value: 1000)
 
+# Prepare the data sheet so other sheets can reference it
+data_sheet.position_rows!
 data_sheet.generate_sheet!
 
 # Create summary sheet that references the data sheet
@@ -116,8 +144,9 @@ summary_sheet.add_column!(:amount)
 
 summary_sheet.add_row!(:sales_summary)
   .add!(:description, value: 'Total Sales')
-  .add!(:amount, data_sheet.cell_ref(:row_1, :value))
+  .add!(:amount, data_sheet.cell_ref(:value, :row_1))
 
+summary_sheet.position_rows!
 summary_sheet.generate_sheet!
 ```
 
@@ -159,7 +188,17 @@ Configure column widths and other properties:
 ```ruby
 sheet.add_column!(:narrow, width: 10)
 sheet.add_column!(:wide, width: 30)
-sheet.add_column!(:auto)  # Auto-calculated width
+sheet.add_column!(:auto, width: nil)  # Let caxlsx auto-calc width from contents
+
+# Or use computed widths
+sheet.add_column!(
+  :fit_header,
+  width: Zaxcel::Column::ComputedColumnWidth::Header,
+)
+sheet.add_column!(
+  :fit_content,
+  width: Zaxcel::Column::ComputedColumnWidth::MaxContent,
+)
 ```
 
 ### Advanced Features
@@ -167,21 +206,21 @@ sheet.add_column!(:auto)  # Auto-calculated width
 #### SUMIF and SUMIFS
 
 ```ruby
-# Sum values where condition is met
+# Sum values where a condition is met
 sum_if = Zaxcel::Functions.sum_if(
-  range: Zaxcel::Lang.range(category_column),
-  criteria: 'Sales',
-  sum_range: Zaxcel::Lang.range(amount_column)
+  column_to_check: category_column,
+  value_to_check: 'Sales',
+  column_to_sum: amount_column,
 )
 
 # Sum with multiple conditions
 sum_ifs = Zaxcel::Functions.sum_ifs(
   ranges_to_check: [
     Zaxcel::Lang.range(category_column),
-    Zaxcel::Lang.range(region_column)
+    Zaxcel::Lang.range(region_column),
   ],
-  criteria: ['Sales', 'West'],
-  range_to_sum: Zaxcel::Lang.range(amount_column)
+  values_to_check: ['Sales', 'West'],
+  range_to_sum: Zaxcel::Lang.range(amount_column),
 )
 ```
 
@@ -189,34 +228,33 @@ sum_ifs = Zaxcel::Functions.sum_ifs(
 
 ```ruby
 # Modern XLOOKUP
-lookup = Zaxcel::Functions::XLookup.new(
-  lookup_value: 'Product A',
-  lookup_array: Zaxcel::Lang.range(product_column),
-  return_array: Zaxcel::Lang.range(price_column)
+lookup = Zaxcel::Functions.x_lookup(
+  'Product A',
+  idx_range: Zaxcel::Lang.range(product_column),
+  value_range: Zaxcel::Lang.range(price_column),
 )
 
 # Traditional INDEX/MATCH
-match = Zaxcel::Functions::Match.new(
-  lookup_value: 'Product A',
-  lookup_array: Zaxcel::Lang.range(product_column),
-  match_type: Zaxcel::Functions::Match::MatchType::ExactMatch
+match = Zaxcel::Functions.match(
+  value: 'Product A',
+  range: Zaxcel::Lang.range(product_column),
+  match_type: Zaxcel::Functions::Match::MatchType::EXACT,
 )
 
-index = Zaxcel::Functions::Index.new(
-  array: Zaxcel::Lang.range(price_column),
-  row_num: match
+index = Zaxcel::Functions.index(
+  index_value: match,
+  range: price_column,
 )
 ```
 
-#### Conditional Formatting with IF
+#### Conditional Logic
 
 ```ruby
-# Build complex conditional logic
-status = Zaxcel::IfBuilder.new
-  .if(row.ref(:amount) > 1000, 'High')
-  .elsif(row.ref(:amount) > 500, 'Medium')
+# Build conditional logic
+status = Zaxcel::Lang
+  .if(row.ref(:amount) > 1000)
+  .then('High')
   .else('Low')
-  .build
 ```
 
 ### Sheet Visibility
@@ -245,28 +283,28 @@ visible_sheet = document.add_sheet!(
 
 The main container for your Excel workbook.
 
-* `new(width_units_by_default_character: Float)` - Create a new document
-* `add_sheet!(name, sheet_visibility: SheetVisibility)` - Add a new worksheet
-* `add_style!(name, **kwargs)` - Define a named style
-* `sheet(name)` - Get a sheet by name
-* `file_contents` - Get the binary Excel file content
+- `new(width_units_by_default_character: Float)` - Create a new document
+- `add_sheet!(name, sheet_visibility: SheetVisibility)` - Add a new worksheet
+- `add_style!(name, **kwargs)` - Define a named style
+- `sheet(name)` - Get a sheet by name
+- `file_contents` - Get the binary Excel file content
 
 #### `Zaxcel::Sheet`
 
 Represents a worksheet within the document.
 
-* `add_column!(name, width: nil)` - Add a column
-* `add_row!(name, style_group: nil)` - Add a row
-* `cell_ref(row_name, col_name, sheet_name: nil)` - Get a reference to a cell
-* `generate_sheet!` - Finalize the sheet (call before writing)
+- `add_column!(name, width: nil)` - Add a column (use `nil` for auto width; or `Zaxcel::Column::ComputedColumnWidth`)
+- `add_row!(name, style_group: nil)` - Add a row
+- `cell_ref(row_name, col_name, sheet_name: nil)` - Get a reference to a cell
+- `position_rows!` then `generate_sheet!` - Finalize the sheet (call before writing)
 
 #### `Zaxcel::Row`
 
 Represents a row within a sheet.
 
-* `add!(column_name, value:, style: nil, to_extract: false)` - Add a cell value
-* `add_many!(hash)` - Add multiple cells at once
-* `ref(column_name)` - Get a reference to a cell in this row
+- `add!(column_name, value:, style: nil, to_extract: false)` - Add a cell value
+- `add_many!(hash)` - Add multiple cells at once
+- `ref(column_name)` - Get a reference to a cell in this row
 
 #### `Zaxcel::Column`
 
@@ -276,19 +314,22 @@ Represents a column within a sheet.
 
 All Excel functions are available under `Zaxcel::Functions`:
 
-* `abs(value)` - Absolute value
-* `sum_range(range)` - Sum a range of cells
-* `sum_if(range:, criteria:, sum_range:)` - Conditional sum
-* `sum_ifs(ranges_to_check:, criteria:, range_to_sum:)` - Multiple condition sum
-* `average(values)` - Average of values
-* `max(values)` - Maximum value
-* `min(values)` - Minimum value
-* `round(value, precision:)` - Round to decimal places
-* `if(condition:, true_value:, false_value:)` - Conditional logic
-* `and(*conditions)` - Logical AND
-* `or(*conditions)` - Logical OR
-* `concatenate(*values)` - Join strings
-* `text(value, format:)` - Format value as text
+- `abs(value)` - Absolute value
+- `sum(*values_or_ranges)` - Sum values and/or ranges
+- `sum_range([first_ref, last_ref])` - Sum a contiguous range (convenience)
+- `sum_if(column_to_check:, value_to_check:, column_to_sum:)`
+- `sum_ifs(ranges_to_check:, values_to_check:, range_to_sum:)`
+- `average(range)` - Average of a contiguous range
+- `max(*values_or_ranges)` - Maximum value
+- `min(*values_or_ranges)` - Minimum value
+- `round(value, precision:)` - Round to decimal places
+- `and(lhs, rhs)` / `or(lhs, rhs)` - Logical operations
+- `concatenate(*values)` - Join strings
+- `text(value, format_string:)` - Format value as text
+- `len(value)` - String length
+- `x_lookup(condition, idx_range:, value_range:)`
+- `index(index_value:, range:)`
+- `match(value:, range:, match_type:)` with `MatchType::EXACT`, `LESS_THAN_OR_EQUAL`, `GREATER_THAN_OR_EQUAL`
 
 ## Development
 
@@ -329,4 +370,3 @@ The gem is available as open source under the terms of the [MIT License](https:/
 Created by the engineering team at [AngelList](https://www.angellist.com).
 
 Built on top of the excellent [caxlsx](https://github.com/caxlsx/caxlsx) library.
-

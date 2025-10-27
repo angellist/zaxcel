@@ -72,6 +72,8 @@ document = Zaxcel::Document.new
 
 # Write output
 filename = 'output.xlsx'
-File.write(filename, document.file_contents)
+data = document.file_contents
+raise 'Document had no contents' if data.nil?
+File.write(filename, data, mode: 'wb')
 puts "Spreadsheet created: #{filename}"
 ```
