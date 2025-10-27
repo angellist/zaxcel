@@ -28,6 +28,11 @@ jobs:
       - name: Run RuboCop (fail only on errors)
         run: bundle exec rubocop --fail-level error
 
+      - name: Generate RBI files (Tapioca)
+        run: |
+          bundle exec tapioca gems
+          bundle exec tapioca dsl
+
       - name: Run Sorbet type checker
         run: bundle exec srb tc
 
