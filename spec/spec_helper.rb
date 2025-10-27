@@ -21,7 +21,8 @@ module Zaxcel
 end
 
 # Provide a no-op mixin to satisfy includes in enums
-module Sorbet::EnumerizableEnum
+class Sorbet
+  module EnumerizableEnum; end
 end
 
 # Ensure String#parameterize and String#first are available
