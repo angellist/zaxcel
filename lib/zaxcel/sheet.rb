@@ -74,7 +74,7 @@ class Zaxcel::Sheet
   sig { returns(T::Array[T.nilable(T.any(Float, Integer))]) }
   def column_widths
     columns.map do |col|
-      next T.cast(col.width, T.nilable(T.any(Float, Integer))) if !Zaxcel::Column::ComputedColumnWidth.value?(col.width)
+      next T.cast(col.width, T.nilable(T.any(Float, Integer))) if !Zaxcel::Column::ComputedColumnWidth.values.include?(col.width)
 
       character_length = case col.width
       when Zaxcel::Column::ComputedColumnWidth::MaxContent
