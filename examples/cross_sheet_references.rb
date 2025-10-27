@@ -3,8 +3,6 @@
 # frozen_string_literal: true
 
 # Example demonstrating cross-sheet references in Zaxcel
-
-require 'bundler/setup'
 require 'zaxcel'
 
 document = Zaxcel::Document.new
@@ -35,9 +33,6 @@ products.each do |product|
     .add!(:stock, value: product[:stock])
   product_rows << row
 end
-
-data_sheet.position_rows!
-data_sheet.generate_sheet!
 
 # Create a summary sheet that references the data sheet
 summary_sheet = document.add_sheet!('Summary')
@@ -92,8 +87,13 @@ summary_sheet.add_row!(:max_price)
   .add!(:metric, value: 'Highest Price')
   .add!(:value, value: max_price, style: :currency)
 
-summary_sheet.position_rows!
-summary_sheet.generate_sheet!
+# Position and generate all sheets at once (after all sheets are built)
+document.sheet_by_name.values.each do |sheet|
+  sheet.position_rows!
+end
+document.sheet_by_name.values.each do |sheet|
+  sheet.generate_sheet!
+end
 
 # Write to file (binary-safe via Tempfile)
 filename = 'cross_sheet_example.xlsx'

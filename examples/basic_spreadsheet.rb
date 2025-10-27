@@ -4,7 +4,6 @@
 
 # Basic example of creating a simple spreadsheet with Zaxcel
 
-require 'bundler/setup'
 require 'zaxcel'
 
 # Create a new document
@@ -86,7 +85,7 @@ total_row.add!(
   style: :total,
 )
 
-# Position rows before generating so references resolve
+# Position and generate sheet (do this after all rows/columns are defined)
 sheet.position_rows!
 sheet.generate_sheet!
 

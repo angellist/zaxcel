@@ -72,7 +72,7 @@ sheet.add_row!(:total)
   .add!(:column_1, value: 'Total')
   .add!(:column_2, row_1.ref(:column_2) + row_2.ref(:column_2))
 
-# Finalize the sheet (position rows before generating so references resolve)
+# Finalize the sheet (position and generate after all content is added)
 sheet.position_rows!
 sheet.generate_sheet!
 
@@ -133,10 +133,6 @@ row_1 = data_sheet.add_row!(:row_1)
   .add!(:category, value: 'Sales')
   .add!(:value, value: 1000)
 
-# Prepare the data sheet so other sheets can reference it
-data_sheet.position_rows!
-data_sheet.generate_sheet!
-
 # Create summary sheet that references the data sheet
 summary_sheet = document.add_sheet!('Summary')
 summary_sheet.add_column!(:description)
@@ -146,8 +142,12 @@ summary_sheet.add_row!(:sales_summary)
   .add!(:description, value: 'Total Sales')
   .add!(:amount, data_sheet.cell_ref(:value, :row_1))
 
-summary_sheet.position_rows!
-summary_sheet.generate_sheet!
+# Position and generate all sheets at once (after all content is added)
+# This allows bidirectional references between sheets
+document.sheet_by_name.values.each do |sheet|
+  sheet.position_rows!
+  sheet.generate_sheet!
+end
 ```
 
 ### Styling

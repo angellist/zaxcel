@@ -34,7 +34,8 @@ sheet.add_row!(:person2)
   .add!(:name, value: 'Bob')
   .add!(:age, value: 25)
 
-# Generate and save
+# Position and generate sheet (after all content is added)
+sheet.position_rows!
 sheet.generate_sheet!
 File.write('people.xlsx', document.file_contents)
 
@@ -72,6 +73,8 @@ sheet.add_row!(:total)
   .add!(:label, value: 'Total')
   .add!(:value, row1.ref(:value) + row2.ref(:value))
 
+# Position and generate sheet (after all content is added)
+sheet.position_rows!
 sheet.generate_sheet!
 File.write('math.xlsx', document.file_contents)
 ```
@@ -103,6 +106,8 @@ sheet.add_row!(:header)
 sheet.add_row!(:data)
   .add!(:category, value: 'Data')
 
+# Position and generate sheet (after all content is added)
+sheet.position_rows!
 sheet.generate_sheet!
 File.write('styled.xlsx', document.file_contents)
 ```
@@ -148,6 +153,8 @@ data.each_with_index do |item, i|
     .add!(:amount, value: item[:amount])
 end
 
+# Position and generate sheet (after all content is added)
+sheet.position_rows!
 sheet.generate_sheet!
 ```
 
@@ -178,4 +185,3 @@ rounded = Zaxcel::Functions.round(value, precision: 2)
 - Open an issue on GitHub
 
 Happy spreadsheet building! 📊
-
