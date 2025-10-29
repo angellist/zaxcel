@@ -12,8 +12,8 @@ Gem::Specification.new do |spec|
   spec.description   = <<~DESC
     Zaxcel is a Ruby library built on top of caxlsx that adds an abstraction layer#{' '}
     to building Excel documents. It provides simple methods for building formulas#{' '}
-    and references to other cells, even across many worksheets, using a clean Ruby#{' '}
-    idiom without having to think about the underlying Excel implementation.
+    and references to other cells, even across many worksheets, using clean Ruby idioms#{' '}
+    without having to think about the underlying Excel implementation.
   DESC
   spec.homepage      = 'https://github.com/angellist/zaxcel'
   spec.license       = 'MIT'
