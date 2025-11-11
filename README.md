@@ -7,6 +7,10 @@ Zaxcel is a Ruby library built on top of [caxlsx](https://github.com/caxlsx/caxl
 - **Goal**: Enable building Excel sheets in a Ruby-idiomatic DSL without having to think about the underlying Excel. We want to interact with purely Ruby objects in a purely Ruby way while building Excel sheets.
 - **Anti-goal**: Reimplementing Excel in Ruby.
 
+## Availability
+
+Zaxcel is available on [RubyGems](https://rubygems.org/gems/zaxcel).
+
 ## Installation
 
 Add this line to your application's Gemfile:
