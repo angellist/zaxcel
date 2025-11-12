@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2025-11-12
+
+### Changed
+
+- Updated development Ruby version to 3.4.0
+- Upgraded Tapioca to ~> 0.17 for Ruby 3.4 compatibility
+
 ### Removed
 
 - Removed `lib/zaxcel/README.md`. Documentation is centralized in the root `README.md`.
@@ -33,4 +40,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [0.1.0]: https://github.com/angellist/zaxcel/releases/tag/v0.1.0
 [0.1.1]: https://github.com/angellist/zaxcel/releases/tag/v0.1.1
-[Unreleased]: https://github.com/angellist/zaxcel/compare/v0.1.1...HEAD
+[0.1.2]: https://github.com/angellist/zaxcel/releases/tag/v0.1.2
+[Unreleased]: https://github.com/angellist/zaxcel/compare/v0.1.2...HEAD

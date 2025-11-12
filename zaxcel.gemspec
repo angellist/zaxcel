@@ -69,5 +69,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rubocop', '~> 1.72'
   spec.add_development_dependency 'rubocop-rspec', '~> 3.5'
   spec.add_development_dependency 'sorbet', '~> 0.5'
-  spec.add_development_dependency 'tapioca', '~> 0.11'
+  spec.add_development_dependency 'tapioca', '~> 0.17'
 end
