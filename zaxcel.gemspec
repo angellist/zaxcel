@@ -6,7 +6,7 @@ Gem::Specification.new do |spec|
   spec.name          = 'zaxcel'
   spec.version       = Zaxcel::VERSION
   spec.authors       = ['AngelList Engineering']
-  spec.email         = ['engineering@angellist.com']
+  spec.email         = ['engineering@angellist.com', 'infra@angellist.com']
 
   spec.summary       = 'A Ruby DSL for building Excel spreadsheets programmatically'
   spec.description   = <<~DESC
