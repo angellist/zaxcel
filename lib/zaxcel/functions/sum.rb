@@ -4,6 +4,13 @@
 class Zaxcel::Functions::Sum < Zaxcel::Function
   extend T::Sig
 
+  # Excel drops a formula on open once a function exceeds 255 arguments, so a column total
+  # enumerating one cell per row (SUM(O5,O6,...,O264)) breaks past 255 rows. Above the limit we
+  # rewrite to value-identical forms: contiguous cells to ranges, otherwise nested sub-SUMs.
+  MAX_FUNCTION_ARGS = 255
+
+  CELL_REF = T.let(/\A([A-Z]+)(\d+)\z/, Regexp)
+
   sig { params(values: T::Array[T.any(Zaxcel::Cell::ValueType, Zaxcel::References::Range)]).void }
   def initialize(values)
     @values = values
@@ -13,6 +20,61 @@ class Zaxcel::Functions::Sum < Zaxcel::Function
   def format(on_sheet:)
     return '0' if @values.blank?
 
-    "SUM(#{@values.map { |value| Zaxcel::Cell.format(value, on_sheet: on_sheet) }.join(',')})"
+    args = @values.map { |value| Zaxcel::Cell.format(value, on_sheet: on_sheet).to_s }
+    return "SUM(#{args.join(',')})" if args.size <= MAX_FUNCTION_ARGS
+
+    collapsed = collapse_consecutive_cells(args)
+    return "SUM(#{collapsed.join(',')})" if collapsed.size <= MAX_FUNCTION_ARGS
+
+    nest_into_subsums(collapsed)
+  end
+
+  private
+
+  # Only plain same-sheet relative refs merge, so literals, cross-sheet/absolute refs, ranges,
+  # duplicates, and gaps pass through unchanged — the summed set, and thus the value, is preserved.
+  sig { params(args: T::Array[String]).returns(T::Array[String]) }
+  def collapse_consecutive_cells(args)
+    out = T.let([], T::Array[String])
+    run = T.let([], T::Array[String])
+    run_col = T.let(nil, T.nilable(String))
+    run_row = T.let(nil, T.nilable(Integer))
+
+    args.each do |arg|
+      match = arg.match(CELL_REF)
+      if match && run_col == match[1] && !run_row.nil? && match[2].to_i == run_row + 1
+        run << arg
+        run_row = match[2].to_i
+      else
+        out.concat(flush_run(run))
+        if match
+          run = [arg]
+          run_col = match[1]
+          run_row = match[2].to_i
+        else
+          run = []
+          run_col = nil
+          run_row = nil
+          out << arg
+        end
+      end
+    end
+    out.concat(flush_run(run))
+    out
+  end
+
+  sig { params(run: T::Array[String]).returns(T::Array[String]) }
+  def flush_run(run)
+    return [] if run.empty?
+    return [T.must(run.first)] if run.size == 1
+
+    ["#{run.first}:#{run.last}"]
+  end
+
+  sig { params(args: T::Array[String]).returns(String) }
+  def nest_into_subsums(args)
+    parts = T.let(args, T::Array[String])
+    parts = parts.each_slice(MAX_FUNCTION_ARGS).map { |slice| "SUM(#{slice.join(',')})" } while parts.size > MAX_FUNCTION_ARGS
+    "SUM(#{parts.join(',')})"
   end
 end
