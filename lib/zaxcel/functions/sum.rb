@@ -25,21 +25,42 @@ class Zaxcel::Functions::Sum < Zaxcel::Function
 
   private
 
-  # Group maximal runs of consecutive same-column cells (A1,A2,A3 -> A1:A3). Only plain same-sheet
-  # relative refs join a run; literals, cross-sheet/absolute refs, ranges, duplicates and gaps break it.
+  # Only same-sheet relative refs merge; literals, ranges, duplicates and gaps pass through unchanged.
   sig { params(args: T::Array[String]).returns(T::Array[String]) }
   def collapse_consecutive_cells(args)
-    args.slice_when { |left, right| !consecutive_cells?(left, right) }.map do |run|
-      run.size > 1 ? "#{run.first}:#{run.last}" : run.first
+    out = T.let([], T::Array[String])
+    run = T.let([], T::Array[String])
+    run_col = T.let(nil, T.nilable(String))
+    run_row = T.let(nil, T.nilable(Integer))
+
+    args.each do |arg|
+      match = arg.match(CELL_REF)
+      if match && run_col == match[1] && !run_row.nil? && match[2].to_i == run_row + 1
+        run << arg
+        run_row = match[2].to_i
+      else
+        out.concat(flush_run(run))
+        if match
+          run = [arg]
+          run_col = match[1]
+          run_row = match[2].to_i
+        else
+          run = []
+          run_col = nil
+          run_row = nil
+          out << arg
+        end
+      end
     end
+    out.concat(flush_run(run))
+    out
   end
 
-  sig { params(left: String, right: String).returns(T::Boolean) }
-  def consecutive_cells?(left, right)
-    left_match = left.match(CELL_REF)
-    right_match = right.match(CELL_REF)
-    return false if left_match.nil? || right_match.nil?
+  sig { params(run: T::Array[String]).returns(T::Array[String]) }
+  def flush_run(run)
+    return [] if run.empty?
+    return [T.must(run.first)] if run.size == 1
 
-    left_match[1] == right_match[1] && right_match[2].to_i == left_match[2].to_i + 1
+    ["#{run.first}:#{run.last}"]
   end
 end
