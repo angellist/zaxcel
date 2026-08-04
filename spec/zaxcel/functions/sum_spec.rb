@@ -42,8 +42,7 @@ RSpec.describe Zaxcel::Functions::Sum do
     end
   end
 
-  # End-to-end: build a workbook, serialize it to a real .xlsx, and read the formulas back out of
-  # the worksheet XML — the same path Excel walks when opening the file.
+  # End-to-end: serialize to a real .xlsx and read formulas back from the worksheet XML — the path Excel walks on open.
   describe 'rendered workbook' do
     def sheet_formulas(document, part: 'xl/worksheets/sheet1.xml')
       Zip::File.open_buffer(StringIO.new(document.file_contents)) do |zip|
