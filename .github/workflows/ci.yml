@@ -12,14 +12,14 @@ jobs:
     strategy:
       matrix:
         ruby-version: ["3.4"]
-    env:
-      BUNDLE_GITHUB__COM: x-access-token:${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
+        env:
+          BUNDLE_GITHUB__COM: x-access-token:${{ secrets.GH_TOKEN }}
         with:
           ruby-version: ${{ matrix.ruby-version }}
           bundler-cache: true
@@ -40,13 +40,13 @@ jobs:
 
   coverage:
     runs-on: ubuntu-latest
-    env:
-      BUNDLE_GITHUB__COM: x-access-token:${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
+        env:
+          BUNDLE_GITHUB__COM: x-access-token:${{ secrets.GH_TOKEN }}
         with:
           ruby-version: "3.4"
           bundler-cache: true
