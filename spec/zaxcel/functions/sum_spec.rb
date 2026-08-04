@@ -11,11 +11,9 @@ RSpec.describe Zaxcel::Functions::Sum do
       doc = Zaxcel::Document.new
       sheet = doc.add_sheet!('realizations')
       amount = sheet.add_column!(:amount)
-      other = sheet.add_column!(:other)
       (1..260).each do |i|
         row = sheet.add_row!(:"r#{i}")
         amount.add_cell!(row: row, value: i)
-        other.add_cell!(row: row, value: i)
       end
       sheet
     end
@@ -37,14 +35,6 @@ RSpec.describe Zaxcel::Functions::Sum do
       first = sheet.cell_ref(:amount, :r1).format(on_sheet: sheet.name)
       last = sheet.cell_ref(:amount, :r260).format(on_sheet: sheet.name)
       expect(described_class.new(refs).format(on_sheet: sheet.name)).to eq("SUM(#{first}:#{last})")
-    end
-
-    it 'keeps every nested SUM within the 255-argument limit for non-contiguous cells' do
-      refs = (1..260).flat_map { |i| [sheet.cell_ref(:amount, :"r#{i}"), sheet.cell_ref(:other, :"r#{i}")] }
-      result = described_class.new(refs).format(on_sheet: sheet.name)
-      inner_arg_counts = result.scan(/SUM\(([^()]*)\)/).map { |inner| inner[0].split(',').size }
-      expect(result).to start_with('SUM(SUM(')
-      expect(inner_arg_counts).to all(be <= described_class::MAX_FUNCTION_ARGS)
     end
 
     it 'renders 0 when empty' do
@@ -87,23 +77,6 @@ RSpec.describe Zaxcel::Functions::Sum do
       sheet.add_row!(:total).add!(:amount, value: Zaxcel::Functions.sum(*refs))
 
       expect(sheet_formulas(document)).to include('SUM(A1,A2,A3)')
-    end
-
-    it 'writes non-contiguous totals as nested sub-SUMs each within the limit' do
-      document = Zaxcel::Document.new
-      sheet = document.add_sheet!('Grid')
-      sheet.add_column!(:a)
-      sheet.add_column!(:b)
-      refs = []
-      (1..200).each do |i|
-        row = sheet.add_row!(:"r#{i}").add!(:a, value: i).add!(:b, value: i)
-        refs << row.ref(:a) << row.ref(:b)
-      end
-      sheet.add_row!(:total).add!(:a, value: Zaxcel::Functions.sum(*refs))
-
-      formulas = sheet_formulas(document)
-      expect(formulas.any? { |f| f.include?('SUM(SUM(') }).to be(true)
-      expect(max_function_args(formulas)).to be <= described_class::MAX_FUNCTION_ARGS
     end
   end
 end

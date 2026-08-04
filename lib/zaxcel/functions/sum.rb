@@ -6,7 +6,7 @@ class Zaxcel::Functions::Sum < Zaxcel::Function
 
   # Excel drops a formula on open once a function exceeds 255 arguments, so a column total
   # enumerating one cell per row (SUM(O5,O6,...,O264)) breaks past 255 rows. Above the limit we
-  # rewrite to value-identical forms: contiguous cells to ranges, otherwise nested sub-SUMs.
+  # collapse runs of consecutive same-column cells into value-identical ranges (SUM(O5:O264)).
   MAX_FUNCTION_ARGS = 255
 
   CELL_REF = T.let(/\A([A-Z]+)(\d+)\z/, Regexp)
@@ -21,12 +21,8 @@ class Zaxcel::Functions::Sum < Zaxcel::Function
     return '0' if @values.blank?
 
     args = @values.map { |value| Zaxcel::Cell.format(value, on_sheet: on_sheet).to_s }
-    return "SUM(#{args.join(',')})" if args.size <= MAX_FUNCTION_ARGS
-
-    collapsed = collapse_consecutive_cells(args)
-    return "SUM(#{collapsed.join(',')})" if collapsed.size <= MAX_FUNCTION_ARGS
-
-    nest_into_subsums(collapsed)
+    args = collapse_consecutive_cells(args) if args.size > MAX_FUNCTION_ARGS
+    "SUM(#{args.join(',')})"
   end
 
   private
@@ -69,12 +65,5 @@ class Zaxcel::Functions::Sum < Zaxcel::Function
     return [T.must(run.first)] if run.size == 1
 
     ["#{run.first}:#{run.last}"]
-  end
-
-  sig { params(args: T::Array[String]).returns(String) }
-  def nest_into_subsums(args)
-    parts = T.let(args, T::Array[String])
-    parts = parts.each_slice(MAX_FUNCTION_ARGS).map { |slice| "SUM(#{slice.join(',')})" } while parts.size > MAX_FUNCTION_ARGS
-    "SUM(#{parts.join(',')})"
   end
 end
