@@ -10,19 +10,21 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
+      env:
+        BUNDLE_GITHUB__COM: oauth2:${{ secrets.GH_TOKEN }}
       with:
         ruby-version: '3.4'
         bundler-cache: true
-    
+
     - name: Build gem
       run: gem build zaxcel.gemspec
-    
+
     - name: Publish to RubyGems
       env:
         GEM_HOST_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
@@ -34,10 +36,9 @@ jobs:
         EOF
         chmod 0600 ~/.gem/credentials
         gem push zaxcel-*.gem
-    
+
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
         files: zaxcel-*.gem
         generate_release_notes: true
-

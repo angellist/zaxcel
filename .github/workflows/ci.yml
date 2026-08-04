@@ -18,6 +18,8 @@ jobs:
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
+        env:
+          BUNDLE_GITHUB__COM: oauth2:${{ secrets.GH_TOKEN }}
         with:
           ruby-version: ${{ matrix.ruby-version }}
           bundler-cache: true
@@ -43,6 +45,8 @@ jobs:
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
+        env:
+          BUNDLE_GITHUB__COM: oauth2:${{ secrets.GH_TOKEN }}
         with:
           ruby-version: "3.4"
           bundler-cache: true
