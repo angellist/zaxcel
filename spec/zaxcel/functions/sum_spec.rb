@@ -24,21 +24,17 @@ RSpec.describe Zaxcel::Functions::Sum do
       rows.map { |i| sheet.cell_ref(:amount, :"r#{i}") }
     end
 
-    it 'collapses a contiguous run of cells into a range' do
+    it 'leaves an enumerated SUM unchanged at or below the argument limit' do
       refs = amount_refs(1..3)
-      expect(described_class.new(refs).format(on_sheet: sheet.name)).to eq('SUM(A1:A3)')
+      expected = "SUM(#{refs.map { |r| r.format(on_sheet: sheet.name) }.join(',')})"
+      expect(described_class.new(refs).format(on_sheet: sheet.name)).to eq(expected)
     end
 
-    it 'collapses a contiguous column of 260 cells into a single range' do
+    it 'collapses a contiguous column above the limit into a single range' do
       refs = amount_refs(1..260)
       first = sheet.cell_ref(:amount, :r1).format(on_sheet: sheet.name)
       last = sheet.cell_ref(:amount, :r260).format(on_sheet: sheet.name)
       expect(described_class.new(refs).format(on_sheet: sheet.name)).to eq("SUM(#{first}:#{last})")
-    end
-
-    it 'keeps non-consecutive cells as separate arguments' do
-      refs = amount_refs([1, 3, 5])
-      expect(described_class.new(refs).format(on_sheet: sheet.name)).to eq('SUM(A1,A3,A5)')
     end
 
     it 'renders 0 when empty' do
@@ -60,7 +56,7 @@ RSpec.describe Zaxcel::Functions::Sum do
       formulas.flat_map { |f| f.scan(/SUM\(([^()]*)\)/).map { |inner| inner[0].split(',').size } }.max
     end
 
-    it 'writes a contiguous column total as one range and keeps the file within Excel limits' do
+    it 'writes an over-limit contiguous total as one range and keeps the file within Excel limits' do
       document = Zaxcel::Document.new
       sheet = document.add_sheet!('Realizations')
       sheet.add_column!(:amount)
@@ -74,7 +70,7 @@ RSpec.describe Zaxcel::Functions::Sum do
       expect(max_function_args(formulas)).to be <= described_class::MAX_FUNCTION_ARGS
     end
 
-    it 'writes a small contiguous total as a range' do
+    it 'writes a below-limit total as the original enumerated SUM' do
       document = Zaxcel::Document.new
       sheet = document.add_sheet!('Realizations')
       sheet.add_column!(:amount)
@@ -83,7 +79,7 @@ RSpec.describe Zaxcel::Functions::Sum do
       sheet.position_rows!
       sheet.generate_sheet!
 
-      expect(sheet_formulas(document)).to include('SUM(A1:A3)')
+      expect(sheet_formulas(document)).to include('SUM(A1,A2,A3)')
     end
   end
 end
