@@ -62,6 +62,8 @@ RSpec.describe Zaxcel::Functions::Sum do
       sheet.add_column!(:amount)
       refs = (1..260).map { |i| sheet.add_row!(:"r#{i}").add!(:amount, value: i).ref(:amount) }
       sheet.add_row!(:total).add!(:amount, value: Zaxcel::Functions.sum(*refs))
+      sheet.position_rows!
+      sheet.generate_sheet!
 
       formulas = sheet_formulas(document)
       expect(formulas).to include('SUM(A1:A260)')
@@ -74,6 +76,8 @@ RSpec.describe Zaxcel::Functions::Sum do
       sheet.add_column!(:amount)
       refs = (1..3).map { |i| sheet.add_row!(:"r#{i}").add!(:amount, value: i).ref(:amount) }
       sheet.add_row!(:total).add!(:amount, value: Zaxcel::Functions.sum(*refs))
+      sheet.position_rows!
+      sheet.generate_sheet!
 
       expect(sheet_formulas(document)).to include('SUM(A1,A2,A3)')
     end
