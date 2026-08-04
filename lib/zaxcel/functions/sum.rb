@@ -4,7 +4,7 @@
 class Zaxcel::Functions::Sum < Zaxcel::Function
   extend T::Sig
 
-  # Excel rejects functions with over 255 args; above the limit we collapse consecutive same-column cells into ranges.
+  # Excel caps functions at 255 args; we collapse consecutive same-column cells into ranges to stay under it.
   MAX_FUNCTION_ARGS = 255
 
   CELL_REF = T.let(/\A([A-Z]+)(\d+)\z/, Regexp)
@@ -19,8 +19,7 @@ class Zaxcel::Functions::Sum < Zaxcel::Function
     return '0' if @values.blank?
 
     args = @values.map { |value| Zaxcel::Cell.format(value, on_sheet: on_sheet).to_s }
-    args = collapse_consecutive_cells(args) if args.size > MAX_FUNCTION_ARGS
-    "SUM(#{args.join(',')})"
+    "SUM(#{collapse_consecutive_cells(args).join(',')})"
   end
 
   private

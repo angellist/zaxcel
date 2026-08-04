@@ -24,17 +24,21 @@ RSpec.describe Zaxcel::Functions::Sum do
       rows.map { |i| sheet.cell_ref(:amount, :"r#{i}") }
     end
 
-    it 'renders an enumerated SUM at or below Excel argument limit' do
+    it 'collapses a contiguous run of cells into a range' do
       refs = amount_refs(1..3)
-      expected = "SUM(#{refs.map { |r| r.format(on_sheet: sheet.name) }.join(',')})"
-      expect(described_class.new(refs).format(on_sheet: sheet.name)).to eq(expected)
+      expect(described_class.new(refs).format(on_sheet: sheet.name)).to eq('SUM(A1:A3)')
     end
 
-    it 'collapses a contiguous column of more than 255 cells into a single range' do
+    it 'collapses a contiguous column of 260 cells into a single range' do
       refs = amount_refs(1..260)
       first = sheet.cell_ref(:amount, :r1).format(on_sheet: sheet.name)
       last = sheet.cell_ref(:amount, :r260).format(on_sheet: sheet.name)
       expect(described_class.new(refs).format(on_sheet: sheet.name)).to eq("SUM(#{first}:#{last})")
+    end
+
+    it 'keeps non-consecutive cells as separate arguments' do
+      refs = amount_refs([1, 3, 5])
+      expect(described_class.new(refs).format(on_sheet: sheet.name)).to eq('SUM(A1,A3,A5)')
     end
 
     it 'renders 0 when empty' do
@@ -45,7 +49,7 @@ RSpec.describe Zaxcel::Functions::Sum do
   # End-to-end: serialize a workbook to .xlsx and read the formulas back from the worksheet XML.
   describe 'rendered workbook' do
     def sheet_formulas(document, part: 'xl/worksheets/sheet1.xml')
-      Zip::File.open_buffer(StringIO.new(document.file_contents)) do |zip|
+      Zip::File.open_buffer(StringIO.new(document.file_contents.b)) do |zip|
         xml = zip.get_entry(part).get_input_stream.read
         return xml.scan(%r{<f[^>]*>(.*?)</f>}m).flatten
                   .map { |f| f.gsub('&amp;', '&').gsub('&lt;', '<').gsub('&gt;', '>') }
@@ -70,7 +74,7 @@ RSpec.describe Zaxcel::Functions::Sum do
       expect(max_function_args(formulas)).to be <= described_class::MAX_FUNCTION_ARGS
     end
 
-    it 'writes an enumerated total below the limit' do
+    it 'writes a small contiguous total as a range' do
       document = Zaxcel::Document.new
       sheet = document.add_sheet!('Realizations')
       sheet.add_column!(:amount)
@@ -79,7 +83,7 @@ RSpec.describe Zaxcel::Functions::Sum do
       sheet.position_rows!
       sheet.generate_sheet!
 
-      expect(sheet_formulas(document)).to include('SUM(A1,A2,A3)')
+      expect(sheet_formulas(document)).to include('SUM(A1:A3)')
     end
   end
 end
