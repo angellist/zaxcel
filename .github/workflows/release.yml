@@ -11,6 +11,9 @@ jobs:
     permissions:
       contents: write
       
+    env:
+      BUNDLE_GITHUB__COM: x-access-token:${{ secrets.GITHUB_TOKEN }}
+
     steps:
     - uses: actions/checkout@v4
     

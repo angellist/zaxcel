@@ -12,6 +12,8 @@ jobs:
     strategy:
       matrix:
         ruby-version: ["3.4"]
+    env:
+      BUNDLE_GITHUB__COM: x-access-token:${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - uses: actions/checkout@v4
@@ -38,6 +40,8 @@ jobs:
 
   coverage:
     runs-on: ubuntu-latest
+    env:
+      BUNDLE_GITHUB__COM: x-access-token:${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
