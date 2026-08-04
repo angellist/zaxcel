@@ -4,7 +4,7 @@
 class Zaxcel::Functions::Sum < Zaxcel::Function
   extend T::Sig
 
-  # Excel drops a formula exceeding 255 args on open; above the limit we collapse consecutive same-column cells into value-identical ranges (SUM(O5:O264)).
+  # Excel rejects functions with over 255 args; above the limit we collapse consecutive same-column cells into ranges.
   MAX_FUNCTION_ARGS = 255
 
   CELL_REF = T.let(/\A([A-Z]+)(\d+)\z/, Regexp)
@@ -25,7 +25,7 @@ class Zaxcel::Functions::Sum < Zaxcel::Function
 
   private
 
-  # Only same-sheet relative refs merge; literals, cross-sheet/absolute refs, ranges, duplicates, and gaps pass through, so the value is preserved.
+  # Only same-sheet relative refs merge; literals, ranges, duplicates and gaps pass through unchanged.
   sig { params(args: T::Array[String]).returns(T::Array[String]) }
   def collapse_consecutive_cells(args)
     out = T.let([], T::Array[String])
