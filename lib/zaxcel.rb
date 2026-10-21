@@ -40,6 +40,7 @@ require_relative 'zaxcel/references/range'
 
 # Functions
 require_relative 'zaxcel/functions'
+require_relative 'zaxcel/functions/range_coalescing'
 require_relative 'zaxcel/functions/abs'
 require_relative 'zaxcel/functions/and'
 require_relative 'zaxcel/functions/average'
