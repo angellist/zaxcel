@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Reuse SUM range coalescing for MIN and MAX when more than 255 formatted arguments are supplied. Non-contiguous arguments remain unchanged.
+
 ## [0.1.2] - 2025-11-12
 
 ### Changed

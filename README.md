@@ -121,6 +121,12 @@ if_formula = Zaxcel::Lang
 rounded = Zaxcel::Functions.round(row_1.ref(:amount), precision: 2)
 ```
 
+For `SUM`, `MIN`, and `MAX` with more than 255 formatted arguments, consecutive
+same-column references on the current sheet are combined into ranges (for example,
+`A1,A2,A3` becomes `A1:A3`). Gaps, duplicates, existing ranges, absolute references,
+and cross-sheet references retain their meaning. This does not guarantee that
+non-contiguous arguments will fit within Excel's 255-argument limit.
+
 ### Cross-Sheet References
 
 One of Zaxcel's strengths is making cross-sheet references easy:

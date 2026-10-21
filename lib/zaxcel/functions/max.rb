@@ -11,7 +11,8 @@ class Zaxcel::Functions::Max < Zaxcel::Function
 
   sig { override.params(on_sheet: String).returns(String) }
   def format(on_sheet:)
-    formatted_values = @values.map { |value| Zaxcel::Cell.format(value, on_sheet: on_sheet) }.compact
+    formatted_values = @values.map { |value| Zaxcel::Cell.format(value, on_sheet: on_sheet) }.compact.map(&:to_s)
+    formatted_values = Zaxcel::Functions::RangeCoalescing.coalesce(formatted_values)
     "MAX(#{formatted_values.join(',')})"
   end
 end
