@@ -30,7 +30,7 @@ class Zaxcel::Document
     worksheet.page_setup.fit_to(width: 1, height: 1)
 
     # This is necessary to show grouped columns, etc. The default value is false, which is inconsistent with new
-    # new documents created in excel. See https://github.com/caxlsx/caxlsx/issues/344 for additional context.
+    # documents created in excel. See https://github.com/caxlsx/caxlsx/issues/344 for additional context.
     worksheet.sheet_view.show_outline_symbols = true
 
     sheet = Zaxcel::Sheet.new(name: sheet_name, document: self, worksheet: worksheet, visibility: sheet_visibility)
@@ -83,7 +83,7 @@ class Zaxcel::Document
   sig { params(sheet_name: String, pending_sheet_names: T::Array[String]).returns(String) }
   def clean_sheet_name(sheet_name, pending_sheet_names: [])
     # sheet names in excel must
-    # 1. be max 31 charaters
+    # 1. be max 31 characters
     # 2. not special characters
     # 3. be unique
     cleaned_sheet_name = sheet_name.gsub(/[^0-9a-z_ ]/i, '').parameterize(
